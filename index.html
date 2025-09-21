@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login Card Swipe</title>
+<title>Login Card Carousel</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
   * { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif; }
+
   body {
     height: 100vh;
     display: flex;
@@ -15,58 +16,40 @@
     background: linear-gradient(to right, #e0eafc, #cfdef3);
   }
 
+  .carousel-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    perspective: 1000px;
+  }
+
   .login-card {
-    background: rgba(255, 255, 255, 0.95);
-    width: 380px;
-    padding: 30px 25px;
+    background: rgba(255,255,255,0.95);
+    width: 300px;
+    padding: 25px;
     border-radius: 15px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    margin: 0 15px;
     text-align: center;
-    overflow: hidden;
-    position: relative;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    flex-shrink: 0;
   }
 
-  /* Tab buttons */
-  .tab-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #ddd;
-  }
-  .tab-buttons button {
-    flex: 1;
-    padding: 12px 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    font-weight: 600;
-    color: #555;
-    transition: all 0.3s ease;
-    position: relative;
-  }
-  .tab-buttons button.active { color: #0077cc; }
-  .tab-buttons button.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 20%;
-    width: 60%;
-    height: 3px;
-    background-color: #0077cc;
-    border-radius: 3px;
+  .login-card.active {
+    transform: scale(1.1);
+    opacity: 1;
+    z-index: 2;
   }
 
-  /* Tab content container for swipe */
-  .tab-wrapper {
-    display: flex;
-    transition: transform 0.4s ease;
-    width: 300%;
+  .login-card.inactive {
+    transform: scale(0.8);
+    opacity: 0.5;
+    z-index: 1;
   }
-  .tab-content {
-    flex: 1 0 100%;
-    text-align: left;
-    padding-top: 0;
-  }
+
+  .login-card h2 { margin-bottom: 20px; color: #333; }
 
   .input-group {
     position: relative;
@@ -93,7 +76,7 @@
     outline: none;
   }
 
-  .tab-content button {
+  .login-card button {
     width: 100%;
     padding: 12px;
     border: none;
@@ -105,71 +88,107 @@
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
   }
-  .tab-content button:hover { background-color: #005fa3; transform: translateY(-2px); }
+  .login-card button:hover { background-color: #005fa3; transform: translateY(-2px); }
 
-  @media(max-width: 400px){
-    .login-card { width: 90%; padding: 25px 20px; }
-    .tab-buttons button::after { left: 10%; width: 80%; }
+  .nav-buttons {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .nav-buttons button {
+    pointer-events: all;
+    background: rgba(0,0,0,0.2);
+    border: none;
+    padding: 10px;
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  .nav-buttons button:hover { background: rgba(0,0,0,0.5); }
+
+  @media(max-width: 700px){
+    .carousel-container { flex-direction: column; }
+    .login-card { margin: 10px 0; }
+    .login-card.inactive { display: none; }
+    .nav-buttons { display: none; }
   }
 </style>
 </head>
 <body>
 
-<div class="login-card">
-  <div class="tab-buttons">
-    <button class="tab-btn active" data-index="0">Login Siswa</button>
-    <button class="tab-btn" data-index="1">Login Guru</button>
-    <button class="tab-btn" data-index="2">Daftar Guru</button>
+<div class="carousel-container">
+  <!-- Card Login Siswa -->
+  <div class="login-card active" data-index="0">
+    <h2>Login Siswa</h2>
+    <div class="input-group"><i class="fas fa-user"></i><input type="text" placeholder="NIS / Username"></div>
+    <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
+    <button>Login Siswa</button>
   </div>
 
-  <div class="tab-wrapper">
-    <!-- Login Siswa -->
-    <div class="tab-content">
-      <div class="input-group"><i class="fas fa-user"></i><input type="text" placeholder="NIS / Username Siswa"></div>
-      <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
-      <button>Login Siswa</button>
-    </div>
+  <!-- Card Login Guru -->
+  <div class="login-card inactive" data-index="1">
+    <h2>Login Guru</h2>
+    <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
+    <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
+    <button>Login Guru</button>
+  </div>
 
-    <!-- Login Guru -->
-    <div class="tab-content">
-      <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
-      <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
-      <button>Login Guru</button>
-    </div>
+  <!-- Card Daftar Guru -->
+  <div class="login-card inactive" data-index="2">
+    <h2>Daftar Guru</h2>
+    <div class="input-group"><i class="fas fa-id-badge"></i><input type="text" placeholder="Nama Lengkap"></div>
+    <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
+    <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
+    <button>Daftar Guru</button>
+  </div>
 
-    <!-- Daftar Guru -->
-    <div class="tab-content">
-      <div class="input-group"><i class="fas fa-id-badge"></i><input type="text" placeholder="Nama Lengkap"></div>
-      <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
-      <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
-      <button>Daftar Guru</button>
-    </div>
+  <!-- Navigation buttons -->
+  <div class="nav-buttons">
+    <button id="prev"><i class="fas fa-chevron-left"></i></button>
+    <button id="next"><i class="fas fa-chevron-right"></i></button>
   </div>
 </div>
 
 <script>
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  const tabWrapper = document.querySelector('.tab-wrapper');
-  let currentIndex = 0;
+  const cards = document.querySelectorAll('.login-card');
+  let current = 0;
 
-  function updateTab(index){
-    currentIndex = index;
-    tabWrapper.style.transform = `translateX(-${index*100}%)`;
-    tabButtons.forEach(btn => btn.classList.remove('active'));
-    tabButtons[index].classList.add('active');
+  function updateCards(index){
+    current = index;
+    cards.forEach((card,i)=>{
+      if(i===index){
+        card.classList.add('active');
+        card.classList.remove('inactive');
+      }else{
+        card.classList.remove('active');
+        card.classList.add('inactive');
+      }
+    });
   }
 
-  tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => updateTab(parseInt(btn.getAttribute('data-index'))));
+  document.getElementById('prev').addEventListener('click', ()=>{
+    let newIndex = (current-1+cards.length)%cards.length;
+    updateCards(newIndex);
+  });
+
+  document.getElementById('next').addEventListener('click', ()=>{
+    let newIndex = (current+1)%cards.length;
+    updateCards(newIndex);
   });
 
   // Swipe detection
   let startX = 0;
-  tabWrapper.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
-  tabWrapper.addEventListener('touchend', e => {
+  document.querySelector('.carousel-container').addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; });
+  document.querySelector('.carousel-container').addEventListener('touchend', e=>{
     let endX = e.changedTouches[0].clientX;
-    if(endX - startX > 50) updateTab(Math.max(0, currentIndex-1)); // swipe right
-    if(startX - endX > 50) updateTab(Math.min(2, currentIndex+1)); // swipe left
+    if(endX - startX > 50) updateCards((current-1+cards.length)%cards.length);
+    if(startX - endX > 50) updateCards((current+1)%cards.length);
   });
 </script>
 
