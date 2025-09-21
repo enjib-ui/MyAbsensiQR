@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login App</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0f1116;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+      width: 90%;
+      max-width: 1000px;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.5s ease;
+    }
+
+    .card {
+      flex: 1;
+      min-height: 300px;
+      background: linear-gradient(145deg, #1b1d23, #131418);
+      border-radius: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 22px;
+      cursor: pointer;
+      transition: all 0.7s ease;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card.active {
+      flex: 3;
+      background: linear-gradient(145deg, #16d9e3, #30c7ec, #46aef7);
+      z-index: 2;
+    }
+
+    .card.shrink-left {
+      transform: translateX(-80%);
+      opacity: 0.6;
+      flex: 0.5;
+    }
+
+    .card.shrink-right {
+      transform: translateX(80%);
+      opacity: 0.6;
+      flex: 0.5;
+    }
+
+    /* Animasi teks */
+    .card span {
+      transition: transform 0.5s ease, opacity 0.5s ease;
+      font-weight: bold;
+    }
+    .card.active span {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+
+    /* Form login */
+    .form {
+      position: absolute;
+      bottom: 20px;
+      width: 80%;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.5s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .card.active .form {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .form input {
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+    }
+
+    .form button {
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: #00ffb3;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .form button:hover {
+      background: #00d99a;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Login Siswa -->
+    <div class="card" id="siswa">
+      <span>Login Siswa</span>
+      <form class="form">
+        <input type="text" placeholder="Username Siswa" required>
+        <input type="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+
+    <!-- Login Guru -->
+    <div class="card" id="guru">
+      <span>Login Guru</span>
+      <form class="form">
+        <input type="text" placeholder="Username Guru" required>
+        <input type="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+
+    <!-- Daftar Pengguna Baru -->
+    <div class="card" id="daftar">
+      <span>Daftar Pengguna Baru</span>
+      <form class="form">
+        <input type="text" placeholder="Nama Lengkap" required>
+        <input type="email" placeholder="Email" required>
+        <input type="password" placeholder="Password" required>
+        <button type="submit">Daftar</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const cards = document.querySelectorAll('.card');
+
+    cards.forEach((card, index) => {
+      card.addEventListener('click', () => {
+        cards.forEach((c, i) => {
+          c.classList.remove('active', 'shrink-left', 'shrink-right');
+          if (i < index) {
+            c.classList.add('shrink-left');
+          } else if (i > index) {
+            c.classList.add('shrink-right');
+          }
+        });
+        card.classList.add('active');
+      });
+    });
+  </script>
+
+</body>
+</html>
