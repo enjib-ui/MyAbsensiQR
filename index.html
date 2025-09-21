@@ -21,11 +21,12 @@
     max-width: 400px;
     overflow: hidden;
     position: relative;
+    text-align: center;
   }
 
   .card-wrapper {
     display: flex;
-    transition: transform 0.5s ease, opacity 0.5s ease;
+    transition: transform 0.5s ease;
   }
 
   .login-card {
@@ -86,6 +87,26 @@
     transition: background-color 0.3s ease, transform 0.2s ease;
   }
   .login-card button:hover { background-color: #005fa3; transform: translateY(-2px); }
+
+  /* Indikator dot */
+  .dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+    gap: 8px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #bbb;
+    transition: background 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+  }
+  .dot.active {
+    background: #0077cc;
+    transform: scale(1.2);
+  }
 </style>
 </head>
 <body>
@@ -114,12 +135,25 @@
       <button>Daftar Guru</button>
     </div>
   </div>
+
+  <!-- indikator dot -->
+  <div class="dots"></div>
 </div>
 
 <script>
   const wrapper = document.querySelector('.card-wrapper');
   const cards = document.querySelectorAll('.login-card');
+  const dotsContainer = document.querySelector('.dots');
   let current = 0;
+
+  // buat dot sesuai jumlah card
+  cards.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.classList.add('dot');
+    dot.addEventListener('click', () => showCard(i));
+    dotsContainer.appendChild(dot);
+  });
+  const dots = document.querySelectorAll('.dot');
 
   function showCard(index){
     if(index < 0) index = 0;
@@ -127,6 +161,7 @@
     current = index;
     wrapper.style.transform = `translateX(-${index*100}%)`;
     cards.forEach((c,i)=> c.classList.toggle('active', i===index));
+    dots.forEach((d,i)=> d.classList.toggle('active', i===index));
   }
 
   // Swipe detection
@@ -138,6 +173,7 @@
     if(startX - endX > 50) showCard(current+1); // swipe kiri
   });
 
+  // tampilkan card pertama
   showCard(0);
 </script>
 
