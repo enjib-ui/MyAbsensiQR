@@ -85,6 +85,7 @@
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-bottom: 10px;
   }
   .login-card button:hover { background-color: #005fa3; transform: translateY(-2px); }
 
@@ -113,6 +114,7 @@
 
 <div class="carousel-container">
   <div class="card-wrapper">
+    <!-- Login Siswa -->
     <div class="login-card">
       <h2>Login Siswa</h2>
       <div class="input-group"><i class="fas fa-user"></i><input type="text" placeholder="NIS / Username"></div>
@@ -120,19 +122,13 @@
       <button>Login Siswa</button>
     </div>
 
+    <!-- Login Guru -->
     <div class="login-card">
       <h2>Login Guru</h2>
       <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
       <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
       <button>Login Guru</button>
-    </div>
-
-    <div class="login-card">
-      <h2>Daftar Guru</h2>
-      <div class="input-group"><i class="fas fa-id-badge"></i><input type="text" placeholder="Nama Lengkap"></div>
-      <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
-      <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
-      <button>Daftar Guru</button>
+      <button style="background:#28a745;">Daftar Guru</button>
     </div>
   </div>
 
