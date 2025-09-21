@@ -8,25 +8,54 @@
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f4f6f9;
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Overlay blur */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      z-index: 5;
+    }
+    .overlay.active {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     /* Judul */
     h1 {
       margin-bottom: 40px;
-      font-size: 2rem;
-      color: #333;
-      font-weight: 700;
+      font-size: 2.5rem;
+      color: #d4af37;
+      font-weight: bold;
       text-align: center;
+      text-shadow: 0 3px 8px rgba(0,0,0,0.6);
+      letter-spacing: 2px;
+      transition: opacity 0.5s ease;
+      z-index: 2;
+    }
+    h1.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
 
-    /* Container utama */
+    /* Container */
     .container {
       display: flex;
       gap: 20px;
@@ -34,15 +63,15 @@
       max-width: 1000px;
       justify-content: center;
       align-items: center;
-      transition: all 0.5s ease;
+      z-index: 2;
     }
 
     /* Card */
     .card {
       flex: 1;
-      min-height: 250px;
-      background: #fff;
-      border-radius: 15px;
+      min-height: 260px;
+      background: #f8f5f0;
+      border-radius: 18px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -50,94 +79,107 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.6s ease;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
       position: relative;
       overflow: hidden;
+      color: #333;
+    }
+
+    .card span {
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      font-size: 24px;
     }
 
     /* Card aktif */
     .card.active {
-      flex: 3;
-      background: #007bff;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      transform: translate(-50%, -50%);
+      border-radius: 0;
+      background: linear-gradient(145deg, #1f2c3d, #2c3e50);
       color: #fff;
-      z-index: 2;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      animation: zoomIn 0.5s ease forwards;
     }
 
-    /* Card menepi */
-    .card.shrink-left {
-      transform: translateX(-80%);
-      opacity: 0.5;
-      flex: 0.5;
+    @keyframes zoomIn {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     }
 
-    .card.shrink-right {
-      transform: translateX(80%);
-      opacity: 0.5;
-      flex: 0.5;
+    .card.closing {
+      animation: zoomOut 0.5s ease forwards;
+    }
+    @keyframes zoomOut {
+      from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      to { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
     }
 
-    /* Teks judul dalam card */
-    .card span {
-      transition: opacity 0.4s ease, transform 0.4s ease;
-    }
-    .card.active span {
-      opacity: 0;
-      transform: scale(0.8);
-    }
+    .card.active span { opacity: 0; transform: scale(0.8); }
 
     /* Form */
     .form {
-      position: absolute;
-      bottom: 20px;
+      margin-top: 20px;
       width: 80%;
+      max-width: 400px;
       opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.5s ease;
+      transform: translateY(30px);
+      transition: all 0.6s ease;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
-
     .card.active .form {
       opacity: 1;
       transform: translateY(0);
+      transition-delay: 0.2s;
     }
 
     .form input {
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 14px;
     }
 
     .form button {
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
       border: none;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: bold;
       cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
     }
+    .form button:hover { transform: scale(1.05); }
 
     .form button[type="submit"] {
-      background: #28a745;
-      color: white;
+      background: #d4af37;
+      color: #fff;
     }
+    .form button[type="submit"]:hover { background: #b48e2d; }
 
     .form button.reset {
-      background: #dc3545;
+      background: #6c757d;
       color: white;
     }
+    .form button.reset:hover { background: #565e64; }
   </style>
 </head>
 <body>
+  <h1 id="title">Login Aplikasi</h1>
 
-  <!-- Judul -->
-  <h1>Login Aplikasi</h1>
+  <!-- Overlay blur -->
+  <div class="overlay" id="overlay"></div>
 
-  <!-- Card Login -->
   <div class="container">
-    <!-- Login Siswa -->
     <div class="card" id="siswa">
       <span>Login Siswa</span>
       <form class="form">
@@ -148,7 +190,6 @@
       </form>
     </div>
 
-    <!-- Login Guru -->
     <div class="card" id="guru">
       <span>Login Guru</span>
       <form class="form">
@@ -159,7 +200,6 @@
       </form>
     </div>
 
-    <!-- Daftar Pengguna Baru -->
     <div class="card" id="daftar">
       <span>Daftar Pengguna Baru</span>
       <form class="form">
@@ -175,34 +215,37 @@
   <script>
     const cards = document.querySelectorAll('.card');
     const resetButtons = document.querySelectorAll('.reset');
+    const title = document.getElementById('title');
+    const overlay = document.getElementById('overlay');
 
     // Klik card
-    cards.forEach((card, index) => {
+    cards.forEach((card) => {
       card.addEventListener('click', () => {
         if (!card.classList.contains("active")) {
-          cards.forEach((c, i) => {
-            c.classList.remove('active', 'shrink-left', 'shrink-right');
-            if (i < index) {
-              c.classList.add('shrink-left');
-            } else if (i > index) {
-              c.classList.add('shrink-right');
-            }
-          });
-          card.classList.add('active');
+          title.classList.add("hidden");
+          overlay.classList.add("active");
+          cards.forEach(c => c.style.display = "none");
+          card.style.display = "flex";
+          card.classList.add("active");
         }
       });
     });
 
-    // Klik tombol kembali
+    // Klik kembali
     resetButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        cards.forEach(c => {
-          c.classList.remove('active', 'shrink-left', 'shrink-right');
-        });
+        const card = btn.closest(".card");
+        card.classList.add("closing");
+        overlay.classList.remove("active");
+
+        card.addEventListener("animationend", () => {
+          card.classList.remove("active", "closing");
+          title.classList.remove("hidden");
+          cards.forEach(c => { c.style.display = "flex"; });
+        }, { once: true });
       });
     });
   </script>
-
 </body>
 </html>
