@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login Card Mobile</title>
+<title>Login Card Mobile Animated</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
   * { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif; }
@@ -19,13 +19,21 @@
   .carousel-container {
     width: 100%;
     max-width: 400px;
-    overflow: hidden;
     position: relative;
+    text-align: center;
+  }
+
+  /* Judul di atas */
+  .carousel-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
   }
 
   .card-wrapper {
     display: flex;
-    transition: transform 0.5s ease;
+    transition: transform 0.5s ease, opacity 0.5s ease;
   }
 
   .login-card {
@@ -36,6 +44,14 @@
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     text-align: center;
     flex-shrink: 0;
+    opacity: 0.6;
+    transform: scale(0.95);
+    transition: transform 0.4s ease, opacity 0.4s ease;
+  }
+
+  .login-card.active {
+    opacity: 1;
+    transform: scale(1);
   }
 
   .login-card h2 { margin-bottom: 15px; color: #333; font-size: 1.3em; }
@@ -78,11 +94,34 @@
     transition: background-color 0.3s ease, transform 0.2s ease;
   }
   .login-card button:hover { background-color: #005fa3; transform: translateY(-2px); }
+
+  /* Indicator dots */
+  .dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+    gap: 8px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #bbb;
+    transition: background 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+  }
+  .dot.active {
+    background: #0077cc;
+    transform: scale(1.2);
+  }
 </style>
 </head>
 <body>
 
 <div class="carousel-container">
+  <!-- Judul -->
+  <div class="carousel-title">Pilih Akses</div>
+
   <div class="card-wrapper">
     <div class="login-card">
       <h2>Login Siswa</h2>
@@ -106,18 +145,33 @@
       <button>Daftar Guru</button>
     </div>
   </div>
+
+  <!-- indikator titik -->
+  <div class="dots"></div>
 </div>
 
 <script>
   const wrapper = document.querySelector('.card-wrapper');
   const cards = document.querySelectorAll('.login-card');
+  const dotsContainer = document.querySelector('.dots');
   let current = 0;
+
+  // buat dot sesuai jumlah card
+  cards.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.classList.add('dot');
+    dot.addEventListener('click', () => showCard(i));
+    dotsContainer.appendChild(dot);
+  });
+  const dots = document.querySelectorAll('.dot');
 
   function showCard(index){
     if(index < 0) index = 0;
     if(index >= cards.length) index = cards.length -1;
     current = index;
     wrapper.style.transform = `translateX(-${index*100}%)`;
+    cards.forEach((c,i)=> c.classList.toggle('active', i===index));
+    dots.forEach((d,i)=> d.classList.toggle('active', i===index));
   }
 
   // Swipe detection
@@ -125,12 +179,14 @@
   wrapper.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; });
   wrapper.addEventListener('touchend', e=>{
     let endX = e.changedTouches[0].clientX;
-    if(endX - startX > 50) showCard(current-1); // swipe right
-    if(startX - endX > 50) showCard(current+1); // swipe left
+    if(endX - startX > 50) showCard(current-1); // swipe kanan
+    if(startX - endX > 50) showCard(current+1); // swipe kiri
   });
 
+  // tampilkan card pertama
   showCard(0);
 </script>
 
 </body>
-</html>
+ </html>
+ 
