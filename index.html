@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login Card Carousel Full</title>
+<title>Login Card Mobile</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
   * { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif; }
+
   body {
     height: 100vh;
     display: flex;
@@ -17,50 +18,50 @@
 
   .carousel-container {
     width: 100%;
-    max-width: 1000px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    max-width: 400px;
+    overflow: hidden;
     position: relative;
-    overflow: visible; /* agar card samping terlihat */
   }
 
   .card-wrapper {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    position: relative;
+    transition: transform 0.5s ease;
   }
 
   .login-card {
+    min-width: 100%;
     background: rgba(255,255,255,0.95);
-    width: 300px;
-    padding: 25px;
+    padding: 20px;
     border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    margin: 0 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     text-align: center;
-    position: relative;
-    transition: transform 0.6s ease, opacity 0.6s ease, z-index 0.6s;
     flex-shrink: 0;
   }
 
-  .login-card h2 { margin-bottom: 20px; color: #333; }
+  .login-card h2 { margin-bottom: 15px; color: #333; font-size: 1.3em; }
 
-  .input-group { position: relative; margin-bottom: 20px; }
-  .input-group i { position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #aaa; }
+  .input-group {
+    position: relative;
+    margin-bottom: 15px;
+  }
+  .input-group i {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    color: #aaa;
+  }
   .input-group input {
     width: 100%;
     padding: 12px 12px 12px 40px;
     border: 1px solid #ccc;
     border-radius: 10px;
-    font-size: 16px;
+    font-size: 15px;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
   }
   .input-group input:focus {
     border-color: #0077cc;
-    box-shadow: 0 0 8px rgba(0,119,204,0.3);
+    box-shadow: 0 0 6px rgba(0,119,204,0.3);
     outline: none;
   }
 
@@ -77,53 +78,27 @@
     transition: background-color 0.3s ease, transform 0.2s ease;
   }
   .login-card button:hover { background-color: #005fa3; transform: translateY(-2px); }
-
-  .nav-buttons {
-    position: absolute;
-    top: 50%;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    transform: translateY(-50%);
-    pointer-events: none;
-  }
-  .nav-buttons button {
-    pointer-events: all;
-    background: rgba(0,0,0,0.2);
-    border: none;
-    padding: 12px;
-    border-radius: 50%;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  .nav-buttons button:hover { background: rgba(0,0,0,0.5); }
-
-  @media(max-width: 700px){
-    .card-wrapper { flex-direction: column; }
-    .login-card { margin: 10px 0; transform: scale(1) !important; }
-    .nav-buttons { display: none; }
-  }
 </style>
 </head>
 <body>
 
 <div class="carousel-container">
   <div class="card-wrapper">
-    <div class="login-card" data-index="0">
+    <div class="login-card">
       <h2>Login Siswa</h2>
       <div class="input-group"><i class="fas fa-user"></i><input type="text" placeholder="NIS / Username"></div>
       <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
       <button>Login Siswa</button>
     </div>
-    <div class="login-card" data-index="1">
+
+    <div class="login-card">
       <h2>Login Guru</h2>
       <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
       <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
       <button>Login Guru</button>
     </div>
-    <div class="login-card" data-index="2">
+
+    <div class="login-card">
       <h2>Daftar Guru</h2>
       <div class="input-group"><i class="fas fa-id-badge"></i><input type="text" placeholder="Nama Lengkap"></div>
       <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
@@ -131,50 +106,30 @@
       <button>Daftar Guru</button>
     </div>
   </div>
-
-  <div class="nav-buttons">
-    <button id="prev"><i class="fas fa-chevron-left"></i></button>
-    <button id="next"><i class="fas fa-chevron-right"></i></button>
-  </div>
 </div>
 
 <script>
+  const wrapper = document.querySelector('.card-wrapper');
   const cards = document.querySelectorAll('.login-card');
   let current = 0;
 
-  function updateCarousel(index){
+  function showCard(index){
+    if(index < 0) index = 0;
+    if(index >= cards.length) index = cards.length -1;
     current = index;
-    cards.forEach((card,i)=>{
-      const offset = i - index;
-      const scale = i===index ? 1.1 : 0.85;
-      const rotateY = i<index ? 15 : (i>index ? -15 : 0);
-      const translateX = offset * 220;
-      card.style.transform = `translateX(${translateX}px) scale(${scale}) rotateY(${rotateY}deg)`;
-      card.style.zIndex = i===index ? 3 : 1;
-      card.style.opacity = i===index ? 1 : 0.6;
-    });
+    wrapper.style.transform = `translateX(-${index*100}%)`;
   }
-
-  document.getElementById('prev').addEventListener('click', ()=>{
-    let newIndex = (current-1+cards.length)%cards.length;
-    updateCarousel(newIndex);
-  });
-  document.getElementById('next').addEventListener('click', ()=>{
-    let newIndex = (current+1)%cards.length;
-    updateCarousel(newIndex);
-  });
 
   // Swipe detection
   let startX = 0;
-  const container = document.querySelector('.carousel-container');
-  container.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; });
-  container.addEventListener('touchend', e=>{
+  wrapper.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; });
+  wrapper.addEventListener('touchend', e=>{
     let endX = e.changedTouches[0].clientX;
-    if(endX - startX > 50) updateCarousel((current-1+cards.length)%cards.length);
-    if(startX - endX > 50) updateCarousel((current+1)%cards.length);
+    if(endX - startX > 50) showCard(current-1); // swipe right
+    if(startX - endX > 50) showCard(current+1); // swipe left
   });
 
-  updateCarousel(current);
+  showCard(0);
 </script>
 
 </body>
