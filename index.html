@@ -1,188 +1,101 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Aplikasi</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #2c3e50, #34495e);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Card</title>
+<style>
+  /* Reset dan font */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+  }
 
-    h1 {
-      color: #fff;
-      font-size: 2.2rem;
-      margin-bottom: 50px;
-      letter-spacing: 1px;
-      text-align: center;
-    }
+  body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to right, #e0eafc, #cfdef3);
+  }
 
-    .container {
-      display: flex;
-      gap: 20px;
-      position: relative;
-      z-index: 1;
-    }
+  /* Card Login */
+  .login-card {
+    background: #ffffff;
+    width: 350px;
+    padding: 30px 25px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
 
-    .card {
-      background: linear-gradient(135deg, #3b4b61, #2c3e50);
-      color: #fff;
-      width: 220px;
-      height: 280px;
-      border-radius: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 20px;
-      cursor: pointer;
-      transition: all 0.6s ease;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.4);
-      text-align: center;
-      flex-shrink: 0;
-    }
+  .login-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+  }
 
-    .card span {
-      transition: transform 0.5s ease, font-size 0.5s ease;
-      z-index: 2;
-      position: relative;
-      display: block;
-    }
+  .login-card h2 {
+    margin-bottom: 25px;
+    color: #333333;
+    font-weight: 700;
+  }
 
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.55);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.5s ease;
-      z-index: 5;
-    }
+  /* Input Field */
+  .login-card input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-size: 16px;
+  }
 
-    .overlay.show {
-      opacity: 1;
-      visibility: visible;
-    }
+  .login-card input:focus {
+    border-color: #0077cc;
+    box-shadow: 0 0 8px rgba(0,119,204,0.3);
+    outline: none;
+  }
 
-    .card.active {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      flex: none; /* supaya tidak diatur flex container */
-      border-radius: 0;
-      background: linear-gradient(135deg, #34495e, #2c3e50);
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 40px 20px;
-      box-shadow: none;
-    }
+  /* Button */
+  .login-card button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #0077cc;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
 
-    .card.active span {
-      font-size: 2rem;
-      transform: scale(1.1);
-      margin-bottom: 20px;
-    }
+  .login-card button:hover {
+    background-color: #005fa3;
+    transform: translateY(-2px);
+  }
 
-    .form {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: all 0.6s ease;
-      width: 100%;
-      max-width: 350px;
-      text-align: center;
+  /* Responsive untuk mobile */
+  @media (max-width: 400px) {
+    .login-card {
+      width: 90%;
+      padding: 25px 20px;
     }
-
-    .card.active .form {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .form input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    .form button {
-      width: 100%;
-      padding: 12px;
-      background: #1abc9c;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    .form button:hover {
-      background: #16a085;
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
-  <h1>Pilih Login</h1>
-  <div class="overlay"></div>
-  <div class="container">
-    <div class="card" onclick="activateCard(this)">
-      <span>Login Siswa</span>
-      <div class="form">
-        <input type="text" placeholder="NIS">
-        <input type="password" placeholder="Password">
-        <button>Login</button>
-      </div>
-    </div>
-    <div class="card" onclick="activateCard(this)">
-      <span>Login Guru</span>
-      <div class="form">
-        <input type="text" placeholder="Username">
-        <input type="password" placeholder="Password">
-        <button>Login</button>
-      </div>
-    </div>
-    <div class="card" onclick="activateCard(this)">
-      <span>Daftar Pengguna Baru</span>
-      <div class="form">
-        <input type="text" placeholder="Nama Lengkap">
-        <input type="email" placeholder="Email">
-        <input type="password" placeholder="Password">
-        <button>Daftar</button>
-      </div>
-    </div>
-  </div>
 
-  <script>
-    const cards = document.querySelectorAll('.card');
-    const overlay = document.querySelector('.overlay');
+<div class="login-card">
+  <h2>Login</h2>
+  <input type="text" placeholder="Username" />
+  <input type="password" placeholder="Password" />
+  <button>Login</button>
+</div>
 
-    function activateCard(card) {
-      cards.forEach(c => c.classList.remove('active'));
-      card.classList.add('active');
-      overlay.classList.add('show');
-    }
-
-    overlay.addEventListener('click', () => {
-      cards.forEach(c => c.classList.remove('active'));
-      overlay.classList.remove('show');
-    });
-  </script>
 </body>
 </html>
