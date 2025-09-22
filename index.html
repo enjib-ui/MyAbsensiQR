@@ -107,7 +107,7 @@
 
   /* Modal Popup */
   .modal {
-    display: none;   /* awalnya hidden */
+    display: none;
     position: fixed;
     z-index: 1000;
     left: 0; top: 0;
@@ -255,6 +255,7 @@
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       alert("Login Siswa berhasil: " + userCredential.user.email);
+      // TODO: redirect ke dashboard siswa
     } catch (error) {
       alert("Error: " + error.message);
     }
@@ -266,7 +267,8 @@
     const password = document.getElementById("guruPassword").value;
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      alert("Login Guru berhasil: " + userCredential.user.email);
+      // redirect ke dashboard guru
+      window.location.href = "dashboard-guru.html";
     } catch (error) {
       alert("Error: " + error.message);
     }
@@ -287,4 +289,5 @@
 </script>
 
 </body>
-</html>
+ </html>
+ 
