@@ -88,6 +88,7 @@
       text-align: center;
     }
     .qr-item h4 { margin-bottom: 10px; }
+    .qr-item p { font-size: 14px; color: #555; margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -97,6 +98,7 @@
 <div class="container">
   <div class="card">
     <h2>Tambah Siswa</h2>
+    <div class="input-group"><i class="fas fa-school"></i><input type="text" id="namaSekolah" placeholder="Nama Sekolah"></div>
     <div class="input-group"><i class="fas fa-user"></i><input type="text" id="namaSiswa" placeholder="Nama Siswa"></div>
     <div class="input-group"><i class="fas fa-id-card"></i><input type="text" id="nisSiswa" placeholder="NIS / Username"></div>
     <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="passwordSiswa" placeholder="Password"></div>
@@ -112,52 +114,92 @@
 <!-- QR Code Library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
 <script>
-  function tambahSiswa(){
+  // Konfigurasi Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBd6nLyyJF7_1-4q6x3YQ2ANoy5sYb6De8",
+    authDomain: "my-absensiqr.firebaseapp.com",
+    projectId: "my-absensiqr",
+    storageBucket: "my-absensiqr.firebasestorage.app",
+    messagingSenderId: "109726198069",
+    appId: "1:109726198069:web:f03a7ad718f909d0f9847c"
+  };
+
+  // Inisialisasi Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  async function tambahSiswa(){
+    const sekolah = document.getElementById("namaSekolah").value.trim();
     const nama = document.getElementById("namaSiswa").value.trim();
     const nis = document.getElementById("nisSiswa").value.trim();
     const pass = document.getElementById("passwordSiswa").value.trim();
 
-    if(!nama || !nis || !pass){
+    if(!sekolah || !nama || !nis || !pass){
       alert("Lengkapi semua field!");
       return;
     }
 
-    // Identitas unik siswa (bisa kombinasi NIS + timestamp)
     const uniqueID = nis + "_" + Date.now();
 
-    // Simpan ke localStorage sementara (nanti bisa pakai Firebase Database)
-    let siswaData = JSON.parse(localStorage.getItem("siswaData")) || [];
-    siswaData.push({nama, nis, pass, uniqueID});
-    localStorage.setItem("siswaData", JSON.stringify(siswaData));
+    try {
+      // Simpan ke Firestore
+      await db.collection("siswa").doc(uniqueID).set({
+        sekolah,
+        nama,
+        nis,
+        pass,
+        uniqueID,
+        createdAt: new Date()
+      });
 
-    // Tambahkan ke tampilan
-    renderQR();
-    
-    // Reset form
-    document.getElementById("namaSiswa").value = "";
-    document.getElementById("nisSiswa").value = "";
-    document.getElementById("passwordSiswa").value = "";
+      alert("✅ Siswa berhasil ditambahkan!");
+
+      // Tampilkan ulang daftar siswa
+      renderQR();
+
+      // Reset form
+      document.getElementById("namaSekolah").value = "";
+      document.getElementById("namaSiswa").value = "";
+      document.getElementById("nisSiswa").value = "";
+      document.getElementById("passwordSiswa").value = "";
+
+    } catch (error) {
+      console.error("Error menambah siswa:", error);
+      alert("❌ Gagal menambah siswa!");
+    }
   }
 
-  function renderQR(){
+  async function renderQR(){
     const qrList = document.getElementById("qrList");
     qrList.innerHTML = "";
 
-    let siswaData = JSON.parse(localStorage.getItem("siswaData")) || [];
-    siswaData.forEach(s => {
-      const div = document.createElement("div");
-      div.className = "qr-item";
-      div.innerHTML = `<h4>${s.nama} (${s.nis})</h4><div id="qr_${s.uniqueID}"></div>`;
-      qrList.appendChild(div);
+    try {
+      const snapshot = await db.collection("siswa").orderBy("createdAt","desc").get();
+      snapshot.forEach(doc => {
+        const s = doc.data();
+        const div = document.createElement("div");
+        div.className = "qr-item";
+        div.innerHTML = `
+          <h4>${s.nama} (${s.nis})</h4>
+          <p>🏫 ${s.sekolah}</p>
+          <div id="qr_${s.uniqueID}"></div>
+        `;
+        qrList.appendChild(div);
 
-      // Generate QR
-      new QRCode(document.getElementById("qr_" + s.uniqueID), {
-        text: s.uniqueID,
-        width: 128,
-        height: 128
+        new QRCode(document.getElementById("qr_" + s.uniqueID), {
+          text: s.uniqueID,
+          width: 128,
+          height: 128
+        });
       });
-    });
+    } catch (error) {
+      console.error("Error load siswa:", error);
+    }
   }
 
   // Load data saat halaman dibuka
