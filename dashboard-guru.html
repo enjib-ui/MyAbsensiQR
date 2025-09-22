@@ -22,12 +22,22 @@
       text-align: center;
       font-weight: bold;
       font-size: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header span { flex:1; text-align:center; }
+    header button {
+      background: #ff4d4d;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
     }
 
-    .container {
-      flex: 1;
-      padding: 20px;
-    }
+    .container { flex: 1; padding: 20px; }
 
     .card {
       background: white;
@@ -77,9 +87,7 @@
     }
     button:hover { background: #005fa3; }
 
-    .qr-list {
-      margin-top: 20px;
-    }
+    .qr-list { margin-top: 20px; }
     .qr-item {
       background: #f9f9f9;
       padding: 15px;
@@ -87,13 +95,16 @@
       margin-bottom: 15px;
       text-align: center;
     }
-    .qr-item h4 { margin-bottom: 10px; }
-    .qr-item p { font-size: 14px; color: #555; margin-bottom: 8px; }
+    .qr-item h4 { margin-bottom: 6px; }
+    .qr-item p { margin-bottom: 10px; font-size: 14px; color: #555; }
   </style>
 </head>
 <body>
 
-<header>📘 Dashboard Guru</header>
+<header>
+  <span>📘 Dashboard Guru</span>
+  <button id="logoutBtn">Logout</button>
+</header>
 
 <div class="container">
   <div class="card">
@@ -111,15 +122,15 @@
   </div>
 </div>
 
-<!-- QR Code Library -->
+<!-- Firebase & QR Code -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, collection, doc, setDoc, query, where, orderBy, getDocs, serverTimestamp } 
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-
-<script>
-  // Konfigurasi Firebase
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyBd6nLyyJF7_1-4q6x3YQ2ANoy5sYb6De8",
     authDomain: "my-absensiqr.firebaseapp.com",
@@ -129,11 +140,29 @@
     appId: "1:109726198069:web:f03a7ad718f909d0f9847c"
   };
 
-  // Inisialisasi Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
+  let currentGuruUID = null;
+
+  // Cek login
+  onAuthStateChanged(auth, user => {
+    if(user){
+      currentGuruUID = user.uid;
+      renderQR();
+    } else {
+      window.location.href = "index.html"; // balik kalau belum login
+    }
+  });
+
+  // Tambah siswa
   async function tambahSiswa(){
+    if(!currentGuruUID){
+      alert("Anda harus login!");
+      return;
+    }
+
     const sekolah = document.getElementById("namaSekolah").value.trim();
     const nama = document.getElementById("namaSiswa").value.trim();
     const nis = document.getElementById("nisSiswa").value.trim();
@@ -147,41 +176,47 @@
     const uniqueID = nis + "_" + Date.now();
 
     try {
-      // Simpan ke Firestore
-      await db.collection("siswa").doc(uniqueID).set({
+      await setDoc(doc(db, "siswa", uniqueID), {
+        guruUID: currentGuruUID,
         sekolah,
         nama,
         nis,
         pass,
         uniqueID,
-        createdAt: new Date()
+        createdAt: serverTimestamp()
       });
 
       alert("✅ Siswa berhasil ditambahkan!");
-
-      // Tampilkan ulang daftar siswa
-      renderQR();
-
-      // Reset form
       document.getElementById("namaSekolah").value = "";
       document.getElementById("namaSiswa").value = "";
       document.getElementById("nisSiswa").value = "";
       document.getElementById("passwordSiswa").value = "";
 
+      renderQR();
     } catch (error) {
-      console.error("Error menambah siswa:", error);
-      alert("❌ Gagal menambah siswa!");
+      console.error("Error:", error);
+      alert("❌ Gagal menambah siswa");
     }
   }
+  window.tambahSiswa = tambahSiswa;
 
+  // Render siswa + QR
   async function renderQR(){
+    if(!currentGuruUID) return;
+
     const qrList = document.getElementById("qrList");
     qrList.innerHTML = "";
 
     try {
-      const snapshot = await db.collection("siswa").orderBy("createdAt","desc").get();
-      snapshot.forEach(doc => {
-        const s = doc.data();
+      const q = query(
+        collection(db, "siswa"),
+        where("guruUID","==", currentGuruUID),
+        orderBy("createdAt","desc")
+      );
+      const snapshot = await getDocs(q);
+
+      snapshot.forEach(docSnap => {
+        const s = docSnap.data();
         const div = document.createElement("div");
         div.className = "qr-item";
         div.innerHTML = `
@@ -202,8 +237,11 @@
     }
   }
 
-  // Load data saat halaman dibuka
-  window.onload = renderQR;
+  // Logout
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "index.html";
+  });
 </script>
 
 </body>
