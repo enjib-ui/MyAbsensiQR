@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login Card Mobile Animated</title>
+<title>Login Card Mobile + Firebase</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
   * { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif; }
@@ -148,17 +148,17 @@
     <!-- Login Siswa -->
     <div class="login-card">
       <h2>Login Siswa</h2>
-      <div class="input-group"><i class="fas fa-user"></i><input type="text" placeholder="NIS / Username"></div>
-      <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
-      <button>Login Siswa</button>
+      <div class="input-group"><i class="fas fa-user"></i><input id="siswaEmail" type="email" placeholder="Email Siswa"></div>
+      <div class="input-group"><i class="fas fa-lock"></i><input id="siswaPassword" type="password" placeholder="Password"></div>
+      <button id="loginSiswa">Login Siswa</button>
     </div>
 
     <!-- Login Guru -->
     <div class="login-card">
       <h2>Login Guru</h2>
-      <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
-      <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
-      <button>Login Guru</button>
+      <div class="input-group"><i class="fas fa-user-tie"></i><input id="guruEmail" type="email" placeholder="Email Guru"></div>
+      <div class="input-group"><i class="fas fa-lock"></i><input id="guruPassword" type="password" placeholder="Password"></div>
+      <button id="loginGuru">Login Guru</button>
       <p style="margin-top:10px; font-size:14px;">Belum punya akun? 
         <a href="#" id="openModal">Daftar Guru</a>
       </p>
@@ -177,14 +177,32 @@
   <div class="modal-content">
     <span class="close" id="closeModal">&times;</span>
     <h2>Daftar Guru</h2>
-    <div class="input-group"><i class="fas fa-id-badge"></i><input type="text" placeholder="Nama Lengkap"></div>
-    <div class="input-group"><i class="fas fa-user-tie"></i><input type="text" placeholder="Username Guru"></div>
-    <div class="input-group"><i class="fas fa-lock"></i><input type="password" placeholder="Password"></div>
-    <button>Daftar</button>
+    <div class="input-group"><i class="fas fa-user-tie"></i><input id="daftarEmail" type="email" placeholder="Email Guru"></div>
+    <div class="input-group"><i class="fas fa-lock"></i><input id="daftarPassword" type="password" placeholder="Password"></div>
+    <button id="daftarGuru">Daftar</button>
   </div>
 </div>
 
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } 
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // Config Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBd6nLyyJF7_1-4q6x3YQ2ANoy5sYb6De8",
+    authDomain: "my-absensiqr.firebaseapp.com",
+    projectId: "my-absensiqr",
+    storageBucket: "my-absensiqr.firebasestorage.app",
+    messagingSenderId: "109726198069",
+    appId: "1:109726198069:web:f03a7ad718f909d0f9847c"
+  };
+
+  // Init Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Card swipe logic
   const wrapper = document.querySelector('.card-wrapper');
   const cards = document.querySelectorAll('.login-card');
   const dots = document.querySelectorAll('.dot');
@@ -211,13 +229,14 @@
   // Dots click
   dots.forEach((dot,i)=> dot.addEventListener('click', ()=> showCard(i)));
 
-  // Modal
+  // Modal Daftar Guru
   const modal = document.getElementById("modal");
   const openModal = document.getElementById("openModal");
   const closeModal = document.getElementById("closeModal");
 
   window.onload = () => {
     modal.style.display = "none"; // pastikan modal tertutup saat load
+    showCard(0);
   };
 
   openModal.onclick = (e) => {
@@ -227,7 +246,44 @@
   closeModal.onclick = () => modal.style.display = "none";
   window.onclick = (e) => { if(e.target == modal) modal.style.display = "none"; };
 
-  showCard(0);
+  // --- Firebase Auth actions ---
+
+  // Login siswa
+  document.getElementById("loginSiswa").addEventListener("click", async () => {
+    const email = document.getElementById("siswaEmail").value;
+    const password = document.getElementById("siswaPassword").value;
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      alert("Login Siswa berhasil: " + userCredential.user.email);
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  });
+
+  // Login guru
+  document.getElementById("loginGuru").addEventListener("click", async () => {
+    const email = document.getElementById("guruEmail").value;
+    const password = document.getElementById("guruPassword").value;
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      alert("Login Guru berhasil: " + userCredential.user.email);
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  });
+
+  // Daftar guru
+  document.getElementById("daftarGuru").addEventListener("click", async () => {
+    const email = document.getElementById("daftarEmail").value;
+    const password = document.getElementById("daftarPassword").value;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      alert("Daftar Guru berhasil: " + userCredential.user.email);
+      modal.style.display = "none"; // close modal setelah daftar
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  });
 </script>
 
 </body>
