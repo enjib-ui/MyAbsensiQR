@@ -42,10 +42,30 @@
       padding: 20px;
       margin-bottom: 20px;
     }
-    .card h2 { font-size: 18px; margin-bottom: 15px; text-align: center; color: #333; }
-    .input-group { margin-bottom: 15px; position: relative; }
-    .input-group i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #888; }
-    .input-group input { width: 100%; padding: 12px 12px 12px 35px; border: 1px solid #ccc; border-radius: 10px; font-size: 15px; }
+    .card h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      text-align: center;
+      color: #333;
+    }
+    .input-group {
+      margin-bottom: 15px;
+      position: relative;
+    }
+    .input-group i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 12px 12px 12px 35px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 15px;
+    }
     button {
       width: 100%;
       padding: 12px;
@@ -83,7 +103,7 @@
     <h2>Tambah Siswa</h2>
     <div class="input-group"><i class="fas fa-school"></i><input type="text" id="namaSekolah" placeholder="Nama Sekolah"></div>
     <div class="input-group"><i class="fas fa-user"></i><input type="text" id="namaSiswa" placeholder="Nama Siswa"></div>
-    <div class="input-group"><i class="fas fa-id-card"></i><input type="text" id="nisSiswa" placeholder="NIS / Username"></div>
+    <div class="input-group"><i class="fas fa-id-card"></i><input type="email" id="emailSiswa" placeholder="Email / Username"></div>
     <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="passwordSiswa" placeholder="Password"></div>
     <button onclick="tambahSiswa()">Tambah</button>
   </div>
@@ -94,128 +114,117 @@
   </div>
 </div>
 
+<!-- Firebase & QR Code -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, query, where, orderBy, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, collection, doc, setDoc, query, where, orderBy, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyBd6nLyyJF7_1-4q6x3YQ2ANoy5sYb6De8",
-  authDomain: "my-absensiqr.firebaseapp.com",
-  projectId: "my-absensiqr",
-  storageBucket: "my-absensiqr.firebasestorage.app",
-  messagingSenderId: "109726198069",
-  appId: "1:109726198069:web:f03a7ad718f909d0f9847c"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyBd6nLyyJF7_1-4q6x3YQ2ANoy5sYb6De8",
+    authDomain: "my-absensiqr.firebaseapp.com",
+    projectId: "my-absensiqr",
+    storageBucket: "my-absensiqr.firebasestorage.app",
+    messagingSenderId: "109726198069",
+    appId: "1:109726198069:web:f03a7ad718f909d0f9847c"
+  };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-let currentGuruUID = null;
+  let currentGuruUID = null;
 
-// Cek login guru
-onAuthStateChanged(auth, user => {
-  if(user){
-    currentGuruUID = user.uid;
-    renderQR();
-  } else {
-    window.location.href = "index.html";
-  }
-});
+  // Cek login guru
+  onAuthStateChanged(auth, async (user) => {
+    if(user){
+      const userDoc = await getDocs(query(collection(db,"users"), where("email","==",user.email)));
+      if(!userDoc.empty && userDoc.docs[0].data().role==="guru"){
+        currentGuruUID = user.uid;
+        renderQR();
+      } else {
+        alert("Hanya guru yang dapat mengakses dashboard ini!");
+        await signOut(auth);
+        window.location.href = "index.html";
+      }
+    } else {
+      window.location.href = "index.html";
+    }
+  });
 
-// Tambah siswa + buat akun di Auth + simpan role
-async function tambahSiswa(){
-  if(!currentGuruUID){ alert("Anda harus login!"); return; }
+  // Tambah siswa
+  async function tambahSiswa(){
+    if(!currentGuruUID){
+      alert("Anda harus login!");
+      return;
+    }
+    const sekolah = document.getElementById("namaSekolah").value.trim();
+    const nama = document.getElementById("namaSiswa").value.trim();
+    const email = document.getElementById("emailSiswa").value.trim();
+    const pass = document.getElementById("passwordSiswa").value.trim();
 
-  const sekolah = document.getElementById("namaSekolah").value.trim();
-  const nama = document.getElementById("namaSiswa").value.trim();
-  const nis = document.getElementById("nisSiswa").value.trim();
-  const pass = document.getElementById("passwordSiswa").value.trim();
+    if(!sekolah || !nama || !email || !pass){
+      alert("Lengkapi semua field!");
+      return;
+    }
 
-  if(!sekolah || !nama || !nis || !pass){ alert("Lengkapi semua field!"); return; }
+    try {
+      // Buat user siswa di Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      const uid = userCredential.user.uid;
 
-  const uniqueID = nis + "_" + Date.now();
-  const emailSiswa = nis + "@siswa.com"; // email sementara untuk login Auth
+      // Simpan role siswa di Firestore
+      await setDoc(doc(db, "users", uid), { email, role:"siswa" });
 
-  try {
-    // Buat akun siswa di Auth
-    const userCred = await createUserWithEmailAndPassword(auth, emailSiswa, pass);
-
-    // Simpan role di collection users
-    await setDoc(doc(db, "users", userCred.user.uid), {
-      email: emailSiswa,
-      role: "siswa"
-    });
-
-    // Simpan data siswa
-    await setDoc(doc(db, "siswa", uniqueID), {
-      guruUID: currentGuruUID,
-      sekolah,
-      nama,
-      nis,
-      pass,
-      uniqueID,
-      createdAt: serverTimestamp()
-    });
-
-    alert("✅ Siswa berhasil ditambahkan!");
-    document.getElementById("namaSekolah").value = "";
-    document.getElementById("namaSiswa").value = "";
-    document.getElementById("nisSiswa").value = "";
-    document.getElementById("passwordSiswa").value = "";
-
-    renderQR();
-  } catch (error) {
-    console.error(error);
-    alert("❌ Gagal menambah siswa: " + error.message);
-  }
-}
-window.tambahSiswa = tambahSiswa;
-
-// Render QR siswa
-async function renderQR(){
-  if(!currentGuruUID) return;
-  const qrList = document.getElementById("qrList");
-  qrList.innerHTML = "";
-
-  try {
-    const q = query(
-      collection(db, "siswa"),
-      where("guruUID","==", currentGuruUID),
-      orderBy("createdAt","desc")
-    );
-    const snapshot = await getDocs(q);
-
-    snapshot.forEach(docSnap => {
-      const s = docSnap.data();
-      const div = document.createElement("div");
-      div.className = "qr-item";
-      div.innerHTML = `
-        <h4>${s.nama} (${s.nis})</h4>
-        <p>🏫 ${s.sekolah}</p>
-        <div id="qr_${s.uniqueID}"></div>
-      `;
-      qrList.appendChild(div);
-
-      new QRCode(document.getElementById("qr_" + s.uniqueID), {
-        text: s.uniqueID,
-        width: 128,
-        height: 128
+      // Simpan data siswa
+      await setDoc(doc(db,"siswa",uid),{
+        guruUID: currentGuruUID,
+        sekolah, nama, email, uid,
+        createdAt: serverTimestamp()
       });
-    });
-  } catch (error) {
-    console.error("Error load siswa:", error);
-  }
-}
 
-// Logout
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-  await signOut(auth);
-  window.location.href = "index.html";
-});
+      alert("✅ Siswa berhasil ditambahkan!");
+      document.getElementById("namaSekolah").value = "";
+      document.getElementById("namaSiswa").value = "";
+      document.getElementById("emailSiswa").value = "";
+      document.getElementById("passwordSiswa").value = "";
+
+      renderQR();
+    } catch(error){
+      console.error("Error:", error);
+      alert("❌ Gagal menambah siswa: " + error.message);
+    }
+  }
+  window.tambahSiswa = tambahSiswa;
+
+  // Render siswa + QR
+  async function renderQR(){
+    if(!currentGuruUID) return;
+    const qrList = document.getElementById("qrList");
+    qrList.innerHTML = "";
+
+    try {
+      const q = query(collection(db,"siswa"), where("guruUID","==",currentGuruUID), orderBy("createdAt","desc"));
+      const snapshot = await getDocs(q);
+      snapshot.forEach(docSnap=>{
+        const s = docSnap.data();
+        const div = document.createElement("div");
+        div.className="qr-item";
+        div.innerHTML = `<h4>${s.nama} (${s.email})</h4><p>🏫 ${s.sekolah}</p><div id="qr_${s.uid}"></div>`;
+        qrList.appendChild(div);
+        new QRCode(document.getElementById("qr_"+s.uid), { text: s.uid, width:128, height:128 });
+      });
+    } catch(error){
+      console.error("Error load siswa:", error);
+    }
+  }
+
+  // Logout
+  document.getElementById("logoutBtn").addEventListener("click", async ()=>{
+    await signOut(auth);
+    window.location.href="index.html";
+  });
 </script>
 
 </body>
