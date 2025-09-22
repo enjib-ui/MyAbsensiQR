@@ -1,126 +1,88 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Siswa</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    * { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif;}
-    body {
-      background: linear-gradient(to right, #e0eafc, #cfdef3);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    header {
-      background: #0077cc;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-    }
-    .container {
-      flex: 1;
-      padding: 20px;
-    }
-    .qr-container {
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-    #reader {
-      width: 100%;
-      margin: 0 auto 20px auto;
-    }
-    #scanResult {
-      margin-top: 15px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #0077cc;
-      word-break: break-word;
-    }
-    button {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 10px;
-      background-color: #0077cc;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button:hover { background-color: #005fa3; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Siswa</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
+  body{display:flex;flex-direction:column;min-height:100vh;background:linear-gradient(to right,#e0eafc,#cfdef3);}
+  header{background:#0077cc;color:#fff;padding:15px;text-align:center;font-weight:bold;font-size:18px;display:flex;justify-content:space-between;align-items:center;}
+  header span{flex:1;text-align:center;}
+  header button{background:#ff4d4d;border:none;color:white;padding:8px 14px;border-radius:8px;font-size:14px;cursor:pointer;}
+  .container{flex:1;padding:20px;display:flex;flex-direction:column;align-items:center;}
+  #video{width:100%;max-width:400px;border-radius:12px;margin-bottom:20px;}
+  .log{background:white;padding:15px;border-radius:12px;width:100%;max-width:400px;box-shadow:0 6px 16px rgba(0,0,0,0.2);}
+</style>
 </head>
 <body>
-
-<header>📷 Dashboard Siswa - Scan QR Code</header>
+<header>
+  <span>📘 Dashboard Siswa</span>
+  <button id="logoutBtn">Logout</button>
+</header>
 
 <div class="container">
-  <div class="qr-container">
-    <div id="reader"></div>
-    <div id="scanResult">Hasil scan akan muncul di sini</div>
-    <button id="stopScan">Stop Scan</button>
-  </div>
+  <video id="video" autoplay></video>
+  <div class="log" id="log">Scan QR untuk absen</div>
 </div>
 
-<!-- HTML5 QR Code library -->
-<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 <script type="module">
-  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBd6nLyyJF7_1-4q6x3YQ2ANoy5sYb6De8",
-    authDomain: "my-absensiqr.firebaseapp.com",
-    projectId: "my-absensiqr",
-    storageBucket: "my-absensiqr.firebasestorage.app",
-    messagingSenderId: "109726198069",
-    appId: "1:109726198069:web:f03a7ad718f909d0f9847c"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyBd6nLyyJF7_1-4q6x3YQ2ANoy5sYb6De8",
+  authDomain: "my-absensiqr.firebaseapp.com",
+  projectId: "my-absensiqr",
+  storageBucket: "my-absensiqr.firebasestorage.app",
+  messagingSenderId: "109726198069",
+  appId: "1:109726198069:web:f03a7ad718f909d0f9847c"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  // --- QR Code Scanner ---
-  const scanResult = document.getElementById("scanResult");
-  const html5QrCode = new Html5Qrcode("reader");
+let currentUser = null;
 
-  const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-    // Tampilkan hasil scan
-    scanResult.innerText = `QR Code: ${decodedText}`;
-    console.log("QR Code scanned: ", decodedText);
-  };
+// Cek login siswa
+onAuthStateChanged(auth, async user=>{
+  if(user){
+    currentUser=user;
+  }else{
+    window.location.href="index.html";
+  }
+});
 
-  const config = { fps: 10, qrbox: 250 };
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", async ()=>{
+  await signOut(auth);
+  window.location.href="index.html";
+});
 
-  Html5Qrcode.getCameras().then(cameras => {
-    if(cameras && cameras.length){
-      const cameraId = cameras[0].id;
-      html5QrCode.start(cameraId, config, qrCodeSuccessCallback);
-    } else {
-      scanResult.innerText = "Kamera tidak ditemukan";
+// Setup QR scanner
+import QrScanner from "https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js";
+const videoElem = document.getElementById("video");
+const logElem = document.getElementById("log");
+
+const scanner = new QrScanner(videoElem, async result=>{
+  logElem.innerHTML = `QR Code terdeteksi: <b>${result}</b>`;
+  if(currentUser){
+    try{
+      await setDoc(doc(db, "absensi", currentUser.uid + "_" + Date.now()), {
+        siswaUID: currentUser.uid,
+        qrID: result,
+        timestamp: serverTimestamp()
+      });
+      logElem.innerHTML += "<br>✅ Absen tercatat!";
+    }catch(err){
+      logElem.innerHTML += "<br>❌ Gagal mencatat absen: "+err.message;
     }
-  }).catch(err => {
-    console.error(err);
-    scanResult.innerText = "Error mengakses kamera: " + err;
-  });
-
-  // Stop scan button
-  document.getElementById("stopScan").addEventListener("click", () => {
-    html5QrCode.stop().then(() => {
-      scanResult.innerText = "Scan dihentikan";
-    }).catch(err => {
-      console.error(err);
-      scanResult.innerText = "Gagal menghentikan scan: " + err;
-    });
-  });
-
+  }
+});
+scanner.start();
 </script>
 
 </body>
