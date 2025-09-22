@@ -7,12 +7,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     * {box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif;}
+
     body {
       background: linear-gradient(to right, #e0eafc, #cfdef3);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
+
     header {
       background: #0077cc;
       color: #fff;
@@ -34,7 +36,9 @@
       font-size: 14px;
       cursor: pointer;
     }
+
     .container { flex: 1; padding: 20px; }
+
     .card {
       background: white;
       border-radius: 15px;
@@ -42,12 +46,14 @@
       padding: 20px;
       margin-bottom: 20px;
     }
+
     .card h2 {
       font-size: 18px;
       margin-bottom: 15px;
       text-align: center;
       color: #333;
     }
+
     .input-group {
       margin-bottom: 15px;
       position: relative;
@@ -66,6 +72,7 @@
       border-radius: 10px;
       font-size: 15px;
     }
+
     button {
       width: 100%;
       padding: 12px;
@@ -79,6 +86,7 @@
       transition: background 0.3s ease;
     }
     button:hover { background: #005fa3; }
+
     .qr-list { margin-top: 20px; }
     .qr-item {
       background: #f9f9f9;
@@ -103,9 +111,9 @@
     <h2>Tambah Siswa</h2>
     <div class="input-group"><i class="fas fa-school"></i><input type="text" id="namaSekolah" placeholder="Nama Sekolah"></div>
     <div class="input-group"><i class="fas fa-user"></i><input type="text" id="namaSiswa" placeholder="Nama Siswa"></div>
-    <div class="input-group"><i class="fas fa-id-card"></i><input type="email" id="emailSiswa" placeholder="Email / Username"></div>
+    <div class="input-group"><i class="fas fa-id-card"></i><input type="text" id="nisSiswa" placeholder="NIS / Username"></div>
     <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="passwordSiswa" placeholder="Password"></div>
-    <button onclick="tambahSiswa()">Tambah</button>
+    <button id="tambahBtn" onclick="tambahSiswa()" disabled>Tambah</button>
   </div>
 
   <div class="card">
@@ -118,7 +126,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { getFirestore, collection, doc, setDoc, query, where, orderBy, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -135,19 +143,14 @@
   const db = getFirestore(app);
 
   let currentGuruUID = null;
+  const tambahBtn = document.getElementById("tambahBtn");
 
-  // Cek login guru
-  onAuthStateChanged(auth, async (user) => {
+  // Cek login
+  onAuthStateChanged(auth, user => {
     if(user){
-      const userDoc = await getDocs(query(collection(db,"users"), where("email","==",user.email)));
-      if(!userDoc.empty && userDoc.docs[0].data().role==="guru"){
-        currentGuruUID = user.uid;
-        renderQR();
-      } else {
-        alert("Hanya guru yang dapat mengakses dashboard ini!");
-        await signOut(auth);
-        window.location.href = "index.html";
-      }
+      currentGuruUID = user.uid;
+      tambahBtn.disabled = false;
+      renderQR();
     } else {
       window.location.href = "index.html";
     }
@@ -156,44 +159,43 @@
   // Tambah siswa
   async function tambahSiswa(){
     if(!currentGuruUID){
-      alert("Anda harus login!");
+      alert("⚠️ Menunggu verifikasi login, silakan tunggu sebentar.");
       return;
     }
+
     const sekolah = document.getElementById("namaSekolah").value.trim();
     const nama = document.getElementById("namaSiswa").value.trim();
-    const email = document.getElementById("emailSiswa").value.trim();
+    const nis = document.getElementById("nisSiswa").value.trim();
     const pass = document.getElementById("passwordSiswa").value.trim();
 
-    if(!sekolah || !nama || !email || !pass){
+    if(!sekolah || !nama || !nis || !pass){
       alert("Lengkapi semua field!");
       return;
     }
 
+    const uniqueID = nis + "_" + Date.now();
+
     try {
-      // Buat user siswa di Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      const uid = userCredential.user.uid;
-
-      // Simpan role siswa di Firestore
-      await setDoc(doc(db, "users", uid), { email, role:"siswa" });
-
-      // Simpan data siswa
-      await setDoc(doc(db,"siswa",uid),{
+      await setDoc(doc(db, "siswa", uniqueID), {
         guruUID: currentGuruUID,
-        sekolah, nama, email, uid,
+        sekolah,
+        nama,
+        nis,
+        pass,
+        uniqueID,
         createdAt: serverTimestamp()
       });
 
       alert("✅ Siswa berhasil ditambahkan!");
       document.getElementById("namaSekolah").value = "";
       document.getElementById("namaSiswa").value = "";
-      document.getElementById("emailSiswa").value = "";
+      document.getElementById("nisSiswa").value = "";
       document.getElementById("passwordSiswa").value = "";
 
       renderQR();
-    } catch(error){
+    } catch (error) {
       console.error("Error:", error);
-      alert("❌ Gagal menambah siswa: " + error.message);
+      alert("❌ Gagal menambah siswa");
     }
   }
   window.tambahSiswa = tambahSiswa;
@@ -201,29 +203,44 @@
   // Render siswa + QR
   async function renderQR(){
     if(!currentGuruUID) return;
+
     const qrList = document.getElementById("qrList");
     qrList.innerHTML = "";
 
     try {
-      const q = query(collection(db,"siswa"), where("guruUID","==",currentGuruUID), orderBy("createdAt","desc"));
+      const q = query(
+        collection(db, "siswa"),
+        where("guruUID","==", currentGuruUID),
+        orderBy("createdAt","desc")
+      );
       const snapshot = await getDocs(q);
-      snapshot.forEach(docSnap=>{
+
+      snapshot.forEach(docSnap => {
         const s = docSnap.data();
         const div = document.createElement("div");
-        div.className="qr-item";
-        div.innerHTML = `<h4>${s.nama} (${s.email})</h4><p>🏫 ${s.sekolah}</p><div id="qr_${s.uid}"></div>`;
+        div.className = "qr-item";
+        div.innerHTML = `
+          <h4>${s.nama} (${s.nis})</h4>
+          <p>🏫 ${s.sekolah}</p>
+          <div id="qr_${s.uniqueID}"></div>
+        `;
         qrList.appendChild(div);
-        new QRCode(document.getElementById("qr_"+s.uid), { text: s.uid, width:128, height:128 });
+
+        new QRCode(document.getElementById("qr_" + s.uniqueID), {
+          text: s.uniqueID,
+          width: 128,
+          height: 128
+        });
       });
-    } catch(error){
+    } catch (error) {
       console.error("Error load siswa:", error);
     }
   }
 
   // Logout
-  document.getElementById("logoutBtn").addEventListener("click", async ()=>{
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
     await signOut(auth);
-    window.location.href="index.html";
+    window.location.href = "index.html";
   });
 </script>
 
